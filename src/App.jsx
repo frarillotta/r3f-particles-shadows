@@ -661,7 +661,10 @@ const uniforms = {
 		value: null
 	}
 }
+
+//keep these outside the react rendering cycle, we dont need to re-render the component when these change
 let tempBufferSwap;
+let pause;
 const Particles = () => {
 
 	const colors = getRandomColors();
@@ -712,6 +715,10 @@ const Particles = () => {
 				uniforms.uOuterColor.value = new Color(v)
 			}
 		},
+		pause: {
+			value: false,
+			onChange: (v) => { pause = v }
+		}
 	}));
 	set({ innerColor, outerColor })
 
@@ -775,6 +782,7 @@ const Particles = () => {
 	})
 
 	useFrame((state) => {
+		if (pause) return;
 		const { gl, clock } = state;
 
 		tempBufferSwap = renderTarget1;
