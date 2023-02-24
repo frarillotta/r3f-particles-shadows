@@ -674,15 +674,15 @@ const Particles = () => {
 		curlIntensity: {
 			value: 0,
 			min: 0,
-			max: 0.5,
-			step: 0.001,
+			max: 0.2,
+			step: 0.0001,
 			onChange: (v) => simulationUniforms.uCurlIntensity.value = v,
 		},
 		curlAmplitude: {
 			value: 0,
 			min: 0,
-			max: 0.5,
-			step: 0.001,
+			max: 0.2,
+			step: 0.0001,
 			onChange: (v) => simulationUniforms.uCurlAmplitude.value = v,
 		},
 		attractor: {
@@ -852,6 +852,7 @@ const Scene = () => {
 	);
 };
 
+//TODO: fix resize re-render
 export default function App() {
 	return (
 		<>
