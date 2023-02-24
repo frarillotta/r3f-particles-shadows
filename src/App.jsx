@@ -860,7 +860,7 @@ export default function App() {
 					near: 0.1,
 					far: 90000,
 					fov: 45,
-					position: [0, 3, 3],
+					position: [15, 18, 18],
 				}}
 				dpr={ Math.max(window.devicePixelRatio, 2) }
 			>
