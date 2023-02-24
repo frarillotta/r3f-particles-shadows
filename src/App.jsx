@@ -854,6 +854,7 @@ export default function App() {
 					fov: 45,
 					position: [0, 3, 3],
 				}}
+				dpr={ Math.max(window.devicePixelRatio, 2) }
 			>
 				{/* <Stats /> */}
 				<OrbitControls />
