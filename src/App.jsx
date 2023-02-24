@@ -667,7 +667,7 @@ const Particles = () => {
 	const colors = getRandomColors();
 	const [innerColor, outerColor] = colors;
 
-	const [{ selectedAttractor }, set] = useControls(() => ({
+	const [{ attractor: selectedAttractor }, set] = useControls(() => ({
 		curlIntensity: {
 			value: 0,
 			min: 0,
@@ -682,7 +682,7 @@ const Particles = () => {
 			step: 0.001,
 			onChange: (v) => simulationUniforms.uCurlAmplitude.value = v,
 		},
-		selectedAttractor: {
+		attractor: {
 			options: {
 				'Lorenz Mod2 Attractor': 1,
 				'Thomas Attractor': 2,
