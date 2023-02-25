@@ -566,7 +566,6 @@ const simulationFragmentShader = `
 		pos.y += delta.y;
 		pos.z += delta.z;
 	
-
 		if (uCurlIntensity > 0.) {
 			pos += curlNoise(pos * uTime * uCurlIntensity) * uCurlAmplitude;
 		}
@@ -800,7 +799,7 @@ let pause;
 // ugh stale closure, cant be bothered to debug
 let restartTemp = false;
 const Particles = () => {
-	const [_, restart] = useState(false);
+	const [, restart] = useState(false);
 
 	const colors = getRandomColors();
 	const [innerColor, outerColor] = colors;
@@ -857,6 +856,7 @@ const Particles = () => {
 		},
 		restart: button(() => {
 			// idk how to make leva not have a stale closure here, so i'll just work around it for now
+			//TODO: fix me
 			restartTemp = !restartTemp;
 			restart(restartTemp)
 		})
@@ -943,6 +943,7 @@ const Particles = () => {
 
 	useEffect(() => {
 		setAttractorParams(getBaseParamsPerAttractor(selectedAttractor, false))
+		//TODO: should colors change on each re-render?
 		set({ innerColor, outerColor });
 	}, [selectedAttractor]);
 
