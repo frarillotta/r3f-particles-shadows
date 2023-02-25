@@ -836,15 +836,15 @@ const Particles = () => {
 		curlIntensity: {
 			value: 0,
 			min: 0,
-			max: 0.2,
-			step: 0.001,
+			max: 0.3,
+			step: 0.01,
 			onChange: (v) => simulationUniforms.uCurlIntensity.value = v,
 		},
 		curlAmplitude: {
 			value: 0,
 			min: 0,
-			max: 0.2,
-			step: 0.001,
+			max: 0.3,
+			step: 0.01,
 			onChange: (v) => simulationUniforms.uCurlAmplitude.value = v,
 		},
 		pause: {
