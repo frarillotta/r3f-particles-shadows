@@ -1,5 +1,5 @@
 import { Canvas, useFrame, createPortal, useThree, extend } from "@react-three/fiber";
-import { Suspense, useRef, useLayoutEffect, useMemo } from "react";
+import { Suspense, useRef, useLayoutEffect, useMemo, useEffect, useState } from "react";
 import { OrbitControls, useFBO } from "@react-three/drei";
 import {
 	AdditiveBlending,
@@ -15,7 +15,7 @@ import {
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { ShaderMaterial } from "three";
 import palettes from 'nice-color-palettes';
-import { useControls } from 'leva'
+import { useControls, button } from 'leva'
 import { curlNoise } from "./shaders/curlNoise";
 
 const getRandomPalette = () => {
@@ -145,15 +145,22 @@ const simulationFragmentShader = `
 	uniform float uCurlAmplitude;
 	uniform sampler2D positions;
 
+	uniform float uA;
+	uniform float uB;
+	uniform float uC;
+	uniform float uD;
+	uniform float uE;
+	uniform float uF;
+
 	varying vec2 vUv;
 
 	${curlNoise}
 
 	vec3 lorenzAttractor(vec3 pos) {
 		// Lorenz Attractor parameters
-		float a = 5.0;
-		float b = 14.0;
-		float c = 1.33333;
+		float a = uA;
+		float b = uB;
+		float c = uC;
 
 		// Timestep 
 		float dt = 0.02;
@@ -173,10 +180,10 @@ const simulationFragmentShader = `
 
 	vec3 lorenzMod2Attractor(vec3 pos) {
 		// Lorenz Mod2 Attractor parameters
-		float a = 0.9;
-		float b = 5.0;
-		float c = 9.9;
-		float d = 1.0;
+		float a = uA;
+		float b = uB;
+		float c = uC;
+		float d = uD;
 
 		// Timestep 
 		float dt = 0.005;
@@ -195,7 +202,7 @@ const simulationFragmentShader = `
 	}
 
 	vec3 thomasAttractor(vec3 pos) {
-		float b = 0.19;
+		float a = uA;
 
 		// Timestep 
 		float dt = 0.1;
@@ -206,20 +213,20 @@ const simulationFragmentShader = `
 
 		float dx, dy, dz;
 
-		dx = (-b*x + sin(y)) * dt;
-		dy = (-b*y + sin(z)) * dt;
-		dz = (-b*z + sin(x)) * dt;
+		dx = (-a*x + sin(y)) * dt;
+		dy = (-a*y + sin(z)) * dt;
+		dz = (-a*z + sin(x)) * dt;
 
 		return vec3(dx, dy, dz);
 	}
 
 	vec3 dequanAttractor(vec3 pos) {
-		float a = 40.0;
-		float b = 1.833;
-		float c = 0.16;
-		float d = 0.65;
-		float e = 55.0;
-		float f = 20.0;
+		float a = uA;
+		float b = uB;
+		float c = uC;
+		float d = uD;
+		float e = uE;
+		float f = uF;
 
 		// Timestep 
 		float dt = 0.0005;
@@ -238,11 +245,11 @@ const simulationFragmentShader = `
 	}
 
 	vec3 dradasAttractor(vec3 pos) {
-		float a = 3.0;
-		float b = 2.7;
-		float c = 1.7;
-		float d = 2.0;
-		float e = 9.0;
+		float a = uA;
+		float b = uB;
+		float c = uC;
+		float d = uD;
+		float e = uE;
 
 		// Timestep 
 		float dt = 0.020;
@@ -261,9 +268,9 @@ const simulationFragmentShader = `
 	}
 
 	vec3 arneodoAttractor(vec3 pos) {
-		float a = -5.5;
-		float b = 3.5;
-		float d = -1.0;
+		float a = uA;
+		float b = uB;
+		float c = uC;
 
 		// Timestep 
 		float dt = 0.015;
@@ -276,18 +283,18 @@ const simulationFragmentShader = `
 
 		dx = y * dt;
 		dy = z * dt;
-		dz = (-a * x - b * y - z + d * pow(x, 3.)) * dt;
+		dz = (-a * x - b * y - z + c * pow(x, 3.)) * dt;
 		return vec3(dx, dy, dz);
 
 	}
 
 	vec3 aizawaAttractor(vec3 pos) {
-		float a = 0.95;
-		float b = 0.7;
-		float c = 0.6;
-		float d = 3.5;
-		float e = 0.25;
-		float f = 0.1;
+		float a = uA;
+		float b = uB;
+		float c = uC;
+		float d = uD;
+		float e = uE;
+		float f = uF;
 
 		// Timestep 
 		float dt = 0.03;
@@ -307,10 +314,10 @@ const simulationFragmentShader = `
 
 	vec3 chenLeeAttractor(vec3 pos) {
 
-		float a = 1.66;
-		float b = -3.33;
-		float d = -.126;
-	
+		float a = uA;
+		float b = uB;
+		float c = uC;
+
 		// Timestep 
 		float dt = 0.03;
 	
@@ -322,7 +329,7 @@ const simulationFragmentShader = `
 	
 		dx = ((a * x) - (y * z)) * dt;
 		dy = ((b * y) + (x * z)) * dt;
-		dz = ((d * z) + ((x * y) / 3.)) * dt;
+		dz = ((c * z) + ((x * y) / 3.)) * dt;
 	
 		return vec3(dx, dy, dz);
 
@@ -330,10 +337,9 @@ const simulationFragmentShader = `
 
 	vec3 rosslerAttractor(vec3 pos) {
 
-
-		float a = 0.2;
-		float b = 0.2;
-		float c = 5.7;
+		float a = uA;
+		float b = uB;
+		float c = uC;
 	
 		// Timestep 
 		float dt = 0.05;
@@ -353,10 +359,9 @@ const simulationFragmentShader = `
 	}
 
 	vec3 sprottBAttractor(vec3 pos) {
-
-		float a = 0.4;
-		float b = 1.2;
-		float c = 1.;
+		float a = uA;
+		float b = uB;
+		float c = uC;
 
 		// Timestep 
 		float dt = 0.035;
@@ -376,8 +381,7 @@ const simulationFragmentShader = `
 	}
 
 	vec3 sprottLinzFAttractor(vec3 pos) {
-		float a = 0.5;
-
+		float a = uA;
 		// Timestep 
 		float dt = 0.035;
 	
@@ -396,7 +400,7 @@ const simulationFragmentShader = `
 
 
 	vec3 halvorsenAttractor(vec3 pos) {
-		float a = 1.4;
+		float a = uA;
 
 		// Timestep 
 		float dt = 0.01;
@@ -614,7 +618,13 @@ const simulationUniforms = {
 	uTime: { value: 0 },
 	uCurlIntensity: { value: 0 },
 	uCurlAmplitude: { value: 0 },
-	attractor: { value: null }
+	attractor: { value: null },
+	uA: { value: 0 },
+	uB: { value: 0 },
+	uC: { value: 0 },
+	uD: { value: 0 },
+	uE: { value: 0 },
+	uF: { value: 0 },
 };
 class SimulationMaterial extends ShaderMaterial {
 	constructor(size, selectedAttractor) {
@@ -662,29 +672,141 @@ const uniforms = {
 	}
 }
 
+const LorenzMod2BaseParams = {
+	a: 0.9,
+	b: 5.0,
+	c: 9.9,
+	d: 1.0,
+}
+
+const LorenzBaseParams = {
+	a: 5.0,
+	b: 14.0,
+	c: 1.33333,
+}
+
+const ThomasBaseParams = {
+	a: 0.19,
+}
+
+const DequanBaseParams = {
+	a: 40.,
+	b: 1.833,
+	c: 0.16,
+	d: 0.65,
+	e: 55.,
+	f: 20.,
+}
+
+const DradasBaseParams = {
+	a: 3.,
+	b: 2.7,
+	c: 1.7,
+	d: 2.,
+	e: 9.,
+};
+
+const ArneodoBaseParams = {
+	a: -5.5,
+	b: 3.5,
+	c: -1.,
+}
+
+const AizawaBaseParams = {
+	a: 0.95,
+	b: 0.7,
+	c: 0.6,
+	d: 3.5,
+	e: .25,
+	f: .1,
+}
+
+const ChenLeeBaseParams = {
+	a: 1.66,
+	b: -3.33,
+	c: -.126,
+}
+
+const RosslerBaseParams = {
+	a: 0.2,
+	b: 0.2,
+	c: 5.7,
+}
+
+const SprottBBaseParams = {
+	a: 0.4,
+	b: 1.2,
+	c: 1.,
+}
+
+const SprottLinzFBaseParams = {
+	a: 0.5,
+}
+
+const HalvorsenBaseParams = {
+	a: 1.4,
+}
+
+
+const mapParamToLevaParam = (param) => {
+	return Object.entries(param).reduce((acc, [key, value]) => {
+		acc[key] = {
+			value: value,
+			min: Math.min(-value, value * 2),
+			max: Math.max(-value, value * 2),
+			step: 0.01,
+			onChange: (v) => {
+				simulationUniforms[`u${key.toUpperCase()}`].value = v;
+			}
+		}
+		return acc;
+	}, {});
+}
+
+const getBaseParamsPerAttractor = (attractorId, mapToLeva = true) => {
+	switch (attractorId) {
+		case 0:
+			return mapToLeva ? mapParamToLevaParam(LorenzBaseParams) : LorenzBaseParams
+		case 1:
+			return mapToLeva ? mapParamToLevaParam(LorenzMod2BaseParams) : LorenzMod2BaseParams
+		case 2:
+			return mapToLeva ? mapParamToLevaParam(ThomasBaseParams) : ThomasBaseParams
+		case 3:
+			return mapToLeva ? mapParamToLevaParam(DequanBaseParams) : DequanBaseParams
+		case 4:
+			return mapToLeva ? mapParamToLevaParam(DradasBaseParams) : DradasBaseParams
+		case 5:
+			return mapToLeva ? mapParamToLevaParam(ArneodoBaseParams) : ArneodoBaseParams
+		case 6:
+			return mapToLeva ? mapParamToLevaParam(AizawaBaseParams) : AizawaBaseParams
+		case 7:
+			return mapToLeva ? mapParamToLevaParam(ChenLeeBaseParams) : ChenLeeBaseParams
+		case 8:
+			return mapToLeva ? mapParamToLevaParam(RosslerBaseParams) : RosslerBaseParams
+		case 9:
+			return mapToLeva ? mapParamToLevaParam(SprottBBaseParams) : SprottBBaseParams
+		case 10:
+			return mapToLeva ? mapParamToLevaParam(SprottLinzFBaseParams) : SprottLinzFBaseParams
+		case 11:
+			return mapToLeva ? mapParamToLevaParam(HalvorsenBaseParams) : HalvorsenBaseParams
+		default:
+			return null;
+	}
+}
+
 //keep these outside the react rendering cycle, we dont need to re-render the component when these change
 let tempBufferSwap;
 let pause;
+// ugh stale closure, cant be bothered to debug
+let restartTemp = false;
 const Particles = () => {
+	const [_, restart] = useState(false);
 
 	const colors = getRandomColors();
 	const [innerColor, outerColor] = colors;
 
 	const [{ attractor: selectedAttractor }, set] = useControls(() => ({
-		curlIntensity: {
-			value: 0,
-			min: 0,
-			max: 0.2,
-			step: 0.0001,
-			onChange: (v) => simulationUniforms.uCurlIntensity.value = v,
-		},
-		curlAmplitude: {
-			value: 0,
-			min: 0,
-			max: 0.2,
-			step: 0.0001,
-			onChange: (v) => simulationUniforms.uCurlAmplitude.value = v,
-		},
+
 		attractor: {
 			options: {
 				'Lorenz Mod2 Attractor': 1,
@@ -715,12 +837,46 @@ const Particles = () => {
 				uniforms.uOuterColor.value = new Color(v)
 			}
 		},
+		curlIntensity: {
+			value: 0,
+			min: 0,
+			max: 0.2,
+			step: 0.0001,
+			onChange: (v) => simulationUniforms.uCurlIntensity.value = v,
+		},
+		curlAmplitude: {
+			value: 0,
+			min: 0,
+			max: 0.2,
+			step: 0.0001,
+			onChange: (v) => simulationUniforms.uCurlAmplitude.value = v,
+		},
 		pause: {
 			value: false,
 			onChange: (v) => { pause = v }
-		}
+		},
+		restart: button(() => {
+			// idk how to make leva not have a stale closure here, so i'll just work around it for now
+			restartTemp = !restartTemp;
+			restart(restartTemp)
+		})
 	}));
-	set({ innerColor, outerColor })
+
+	const [, setAttractorParams] = useControls(
+		'Attractor Params',
+		() => {
+			return {
+				reset: button(
+					() => setAttractorParams(getBaseParamsPerAttractor(selectedAttractor, false))
+				),
+				...getBaseParamsPerAttractor(selectedAttractor),
+			}
+		},
+		{
+			collapsed: true
+		},
+		[selectedAttractor]
+	)
 
 	uniforms.uSelectedAttractor.value = selectedAttractor;
 
@@ -729,12 +885,12 @@ const Particles = () => {
 	const points = useRef();
 	const simulationMaterialRef = useRef();
 
-	const scene = useMemo(() => new TScene(), []);
+	const scene = new TScene();
 	const camera = useMemo(() => new OrthographicCamera(-1, 1, 1, -1, 1 / Math.pow(2, 53), 1), []);
 	const positions = useMemo(() => new Float32Array([
 		-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, 1, 0, -1, 1, 0,
 	]), [])
-	const uvs = useMemo(() =>  new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]), []);
+	const uvs = useMemo(() => new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]), []);
 
 	let renderTarget1 = useFBO(size, size, {
 		minFilter: NearestFilter,
@@ -746,7 +902,6 @@ const Particles = () => {
 
 	let renderTarget2 = renderTarget1.clone();
 
-
 	const particlesPosition = useMemo(() => {
 		const length = size * size;
 		const particles = new Float32Array(length * 3);
@@ -755,7 +910,6 @@ const Particles = () => {
 			let i3 = i * 3;
 			particles[i3 + 0] = (i % size) / size;
 			particles[i3 + 1] = i / size / size;
-
 		}
 
 		return particles;
@@ -767,10 +921,16 @@ const Particles = () => {
 	useLayoutEffect(() => {
 		// avoid feedback loop for the textures render pingpong on re-renders
 		if (renderTarget1.texture) {
+			renderTarget1.texture.dispose();
 			renderTarget1.dispose();
 		}
 		if (renderTarget2.texture) {
+			renderTarget2.texture.dispose();
 			renderTarget2.dispose();
+		}
+		if (tempBufferSwap?.texture) {
+			tempBufferSwap.texture.dispose();
+			tempBufferSwap.dispose();
 		}
 		gl.setRenderTarget(renderTarget1);
 		gl.clear();
@@ -779,7 +939,13 @@ const Particles = () => {
 		gl.clear();
 		gl.render(scene, camera);
 		gl.setRenderTarget(null);
-	})
+	});
+
+	useEffect(() => {
+		setAttractorParams(getBaseParamsPerAttractor(selectedAttractor, false))
+		set({ innerColor, outerColor });
+	}, [selectedAttractor]);
+
 
 	useFrame((state) => {
 		if (pause) return;
@@ -863,7 +1029,7 @@ export default function App() {
 					fov: 45,
 					position: [15, 18, 18],
 				}}
-				dpr={ Math.max(window.devicePixelRatio, 2) }
+				dpr={Math.max(window.devicePixelRatio, 2)}
 			>
 				{/* <Stats /> */}
 				<OrbitControls />
