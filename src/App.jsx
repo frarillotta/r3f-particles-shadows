@@ -790,7 +790,7 @@ const getBaseParamsPerAttractor = (attractorId, mapToLeva = true) => {
 		case 11:
 			return mapToLeva ? mapParamToLevaParam(HalvorsenBaseParams) : HalvorsenBaseParams
 		default:
-			return null;
+			return {};
 	}
 }
 
