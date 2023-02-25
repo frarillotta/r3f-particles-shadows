@@ -52,7 +52,6 @@ const fragmentShader = `
 `;
 const vertexShader = `
 	uniform sampler2D uPositions;
-	uniform float uTime;
 	uniform vec3 uInnerColor;
 	uniform vec3 uOuterColor;
 	uniform float uSelectedAttractor;
@@ -139,7 +138,6 @@ const vertexShader = `
 const simulationFragmentShader = `
 	precision highp float;
 
-	uniform float uTime;
 	uniform float attractor;
 	uniform float uCurlIntensity;
 	uniform float uCurlAmplitude;
@@ -567,7 +565,7 @@ const simulationFragmentShader = `
 		pos.z += delta.z;
 	
 		if (uCurlIntensity > 0.) {
-			pos += curlNoise(pos * uTime * uCurlIntensity) * uCurlAmplitude;
+			pos += curlNoise(pos * uCurlIntensity) * uCurlAmplitude;
 		}
 
 		gl_FragColor = vec4(pos,1.0);
@@ -614,7 +612,6 @@ const getRandomData = (width, height) => {
 const simulationUniforms = {
 	positions: { value: null },
 	uFrequency: { value: 0.25 },
-	uTime: { value: 0 },
 	uCurlIntensity: { value: 0 },
 	uCurlAmplitude: { value: 0 },
 	attractor: { value: null },
@@ -840,14 +837,14 @@ const Particles = () => {
 			value: 0,
 			min: 0,
 			max: 0.2,
-			step: 0.0001,
+			step: 0.001,
 			onChange: (v) => simulationUniforms.uCurlIntensity.value = v,
 		},
 		curlAmplitude: {
 			value: 0,
 			min: 0,
 			max: 0.2,
-			step: 0.0001,
+			step: 0.001,
 			onChange: (v) => simulationUniforms.uCurlAmplitude.value = v,
 		},
 		pause: {
@@ -950,14 +947,13 @@ const Particles = () => {
 
 	useFrame((state) => {
 		if (pause) return;
-		const { gl, clock } = state;
+		const { gl } = state;
 
 		tempBufferSwap = renderTarget1;
 		renderTarget1 = renderTarget2;
 		renderTarget2 = tempBufferSwap;
 
 		simulationMaterialRef.current.uniforms.positions.value = renderTarget1.texture;
-		simulationMaterialRef.current.uniforms.uTime.value = clock.elapsedTime;
 
 		gl.setRenderTarget(renderTarget2);
 		gl.clear();
