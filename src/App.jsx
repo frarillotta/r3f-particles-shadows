@@ -114,6 +114,9 @@ const vertexShader = `
 		}
 
 		if (uSelectedAttractor == 12.) {
+			distanceColorMultiplier = 0.05;
+		}
+		if (uSelectedAttractor == 14.) {
 			distanceColorMultiplier = 0.7;
 		}
 
@@ -416,6 +419,29 @@ const simulationFragmentShader = `
 		return vec3(dx, dy, dz);
 	}
 
+	vec3 unifiedChaoticSystemAttractor(vec3 pos) {
+		float a = uA;
+		float b = uB;
+		float c = uC;
+		float d = uD;
+		float e = uE;
+
+		// Timestep 
+		float dt = 0.02;
+	
+		float x = pos.x;
+		float y = pos.y;
+		float z = pos.z;
+	
+		float dx, dy, dz;
+
+		dx = (a*(y-x) + d*x*z)   * dt * 0.1 ;
+		dy = (c*y - x*z )        * dt * 0.1 ;
+		dz = (b*z + x*y - e*x*x) * dt * 0.1 ;
+
+		return vec3(dx, dy, dz);
+	}
+
 	vec3 quadraticStrangeAttractor(vec3 pos) {
 
 		float a0 = -0.875;
@@ -547,6 +573,10 @@ const simulationFragmentShader = `
 		}
 
 		if (attractor == 12.) {
+			delta = unifiedChaoticSystemAttractor(pos);
+		}
+
+		if (attractor == 14.) {
 			delta = quadraticStrangeAttractor(pos);
 		}
 
@@ -743,6 +773,14 @@ const HalvorsenBaseParams = {
 	a: 1.4,
 }
 
+const UnifiedChaoticSystemParams = {
+	a: 40.0,
+	b: 0.833,
+	c: 20.0,
+	d: 0.5,
+	e: 0.65,
+}
+
 
 const mapParamToLevaParam = (param) => {
 	return Object.entries(param).reduce((acc, [key, value]) => {
@@ -785,6 +823,8 @@ const getBaseParamsPerAttractor = (attractorId, mapToLeva = true) => {
 			return mapToLeva ? mapParamToLevaParam(SprottLinzFBaseParams) : SprottLinzFBaseParams
 		case 11:
 			return mapToLeva ? mapParamToLevaParam(HalvorsenBaseParams) : HalvorsenBaseParams
+		case 12:
+			return mapToLeva ? mapParamToLevaParam(UnifiedChaoticSystemParams) : UnifiedChaoticSystemParams
 		default:
 			return {};
 	}
@@ -801,7 +841,6 @@ const Particles = () => {
 	const { scene: currentScene, gl } = useThree();
 	const colors = getRandomColors();
 	const [innerColor, outerColor] = colors;
-
 	const [{ attractor: selectedAttractor }, set] = useControls(() => ({
 
 		attractor: {
@@ -815,11 +854,12 @@ const Particles = () => {
 				'Sprott B Attractor': 9,
 				'Sprott-Linz F Attractor': 10,
 				'Halvorsen Attractor': 11,
+				'Three-Scroll Unified Chaotic System Attractor 1': 12,
 				'Dequan Attractor': 3,
 				'Lorenz Attractor': 0,
 				'Arneodo Attractor (might not work corrently on all GPUs)': 5,
 				'Just curl noise': -1,
-				'quadraticStrangeAttractor (WIP)': 12,
+				'quadraticStrangeAttractor (WIP)': 14,
 			}
 		},
 		innerColor: {
@@ -832,12 +872,6 @@ const Particles = () => {
 			value: outerColor,
 			onChange: (v) => {
 				uniforms.uOuterColor.value = new Color(v)
-			}
-		},
-		backgroundColor: {
-			value: new Color(0.12, 0.12, 0.12),
-			onChange: (v) => {
-				currentScene.background = new Color(v.r / 255, v.g / 255, v.b / 255)
 			}
 		},
 		curlIntensity: {
@@ -853,6 +887,13 @@ const Particles = () => {
 			max: 0.3,
 			step: 0.01,
 			onChange: (v) => simulationUniforms.uCurlAmplitude.value = v,
+		},
+
+		backgroundColor: {
+			value: new Color(0.12, 0.12, 0.12).multiplyScalar(255),
+			onChange: (v) => {
+				currentScene.background = new Color(v.r, v.g, v.b).multiplyScalar(1/255)
+			}
 		},
 		pause: {
 			value: false,
