@@ -798,6 +798,7 @@ let restartTemp = false;
 const Particles = () => {
 	const [, restart] = useState(false);
 
+	const { scene: currentScene, gl } = useThree();
 	const colors = getRandomColors();
 	const [innerColor, outerColor] = colors;
 
@@ -831,6 +832,12 @@ const Particles = () => {
 			value: outerColor,
 			onChange: (v) => {
 				uniforms.uOuterColor.value = new Color(v)
+			}
+		},
+		backgroundColor: {
+			value: new Color(0.12, 0.12, 0.12),
+			onChange: (v) => {
+				currentScene.background = new Color(v.r / 255, v.g / 255, v.b / 255)
 			}
 		},
 		curlIntensity: {
@@ -912,8 +919,6 @@ const Particles = () => {
 		return particles;
 
 	}, [size]);
-
-	const { gl } = useThree();
 
 	useLayoutEffect(() => {
 		// avoid feedback loop for the textures render pingpong on re-renders
@@ -1006,8 +1011,6 @@ const Particles = () => {
 };
 
 const Scene = () => {
-	const { scene } = useThree();
-	scene.background = new Color(0.12, 0.12, 0.12)
 	return (
 		<>
 			<Particles />
