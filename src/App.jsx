@@ -15,7 +15,7 @@ import {
 import { EffectComposer, Bloom } from "@react-three/postprocessing";
 import { ShaderMaterial } from "three";
 import palettes from 'nice-color-palettes';
-import { useControls, button } from 'leva'
+import { useControls, button, folder } from 'leva'
 import { curlNoise } from "./shaders/curlNoise";
 
 const getRandomPalette = () => {
@@ -55,6 +55,8 @@ const vertexShader = `
 	uniform vec3 uInnerColor;
 	uniform vec3 uOuterColor;
 	uniform float uSelectedAttractor;
+	uniform float uParticleSize;
+	uniform float uSizeAttenuationMultiplier;
 
 	varying vec3 vColor;
 	void main() {
@@ -124,11 +126,11 @@ const vertexShader = `
 			distanceColorMultiplier = 0.01;
 		}
 
-		gl_PointSize = 4.0;
+		gl_PointSize = uParticleSize;
 
 		// Size attenuation;
 		//   gl_PointSize *= step(1.0 - (1.0/64.0), position.x) + 0.1;
-		gl_PointSize *= (4.5 / - viewPosition.z);
+		gl_PointSize *= (uSizeAttenuationMultiplier / - viewPosition.z);
 		gl_Position = projectedPosition;
 
 		float dist = distance(pos, vec3(.0));
@@ -695,6 +697,12 @@ const uniforms = {
 	},
 	uSelectedAttractor: {
 		value: null
+	},
+	uParticleSize: {
+		value: 4.0
+	},
+	uSizeAttenuationMultiplier: {
+		value: 4.5,
 	}
 }
 
@@ -841,7 +849,7 @@ const Particles = () => {
 	const { scene: currentScene, gl } = useThree();
 	const colors = getRandomColors();
 	const [innerColor, outerColor] = colors;
-	const [{ attractor: selectedAttractor }, set] = useControls(() => ({
+	const [{ attractor: selectedAttractor, count: particlesCount }, set] = useControls(() => ({
 
 		attractor: {
 			options: {
@@ -892,7 +900,7 @@ const Particles = () => {
 		backgroundColor: {
 			value: new Color(0.12, 0.12, 0.12).multiplyScalar(255),
 			onChange: (v) => {
-				currentScene.background = new Color(v.r, v.g, v.b).multiplyScalar(1/255)
+				currentScene.background = new Color(v.r, v.g, v.b).multiplyScalar(1 / 255)
 			}
 		},
 		pause: {
@@ -904,6 +912,30 @@ const Particles = () => {
 			//TODO: fix me
 			restartTemp = !restartTemp;
 			restart(restartTemp)
+		}),
+		'Particles Controls': folder({
+			count: {
+				value: 128 * 11,
+				min: 128,
+				max: 128 * 25,
+				step: 128,
+			},
+			size: {
+				value: 4,
+				min: 1,
+				max: 10,
+				step: 1,
+				onChange: (v) => uniforms.uParticleSize.value = v,
+			},
+			sizeAttenuationMultiplier: {
+				value: 6.5,
+				min: 1,
+				max: 12,
+				step: 0.5,
+				onChange: (v) => uniforms.uSizeAttenuationMultiplier.value = v,
+			}
+		}, {
+			collapsed: true
 		})
 	}));
 
@@ -925,8 +957,6 @@ const Particles = () => {
 
 	uniforms.uSelectedAttractor.value = selectedAttractor;
 
-	const size = 128 * 11;
-
 	const points = useRef();
 	const simulationMaterialRef = useRef();
 
@@ -937,7 +967,7 @@ const Particles = () => {
 	]), [])
 	const uvs = useMemo(() => new Float32Array([0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0]), []);
 
-	let renderTarget1 = useFBO(size, size, {
+	let renderTarget1 = useFBO(particlesCount, particlesCount, {
 		minFilter: NearestFilter,
 		magFilter: NearestFilter,
 		format: RGBAFormat,
@@ -948,18 +978,18 @@ const Particles = () => {
 	let renderTarget2 = renderTarget1.clone();
 
 	const particlesPosition = useMemo(() => {
-		const length = size * size;
+		const length = particlesCount * particlesCount;
 		const particles = new Float32Array(length * 3);
 
 		for (let i = 0; i < length; i++) {
 			let i3 = i * 3;
-			particles[i3 + 0] = (i % size) / size;
-			particles[i3 + 1] = i / size / size;
+			particles[i3 + 0] = (i % particlesCount) / particlesCount;
+			particles[i3 + 1] = i / particlesCount / particlesCount;
 		}
 
 		return particles;
 
-	}, [size]);
+	}, [particlesCount]);
 
 	useLayoutEffect(() => {
 		// avoid feedback loop for the textures render pingpong on re-renders
@@ -1012,7 +1042,7 @@ const Particles = () => {
 		<>
 			{createPortal(
 				<mesh >
-					<simulationMaterial key={`attractor${selectedAttractor}`} ref={simulationMaterialRef} args={[size, selectedAttractor]} />
+					<simulationMaterial key={`attractor${selectedAttractor}${particlesPosition.length}`} ref={simulationMaterialRef} args={[particlesCount, selectedAttractor]} />
 					<bufferGeometry>
 						<bufferAttribute
 							attach="attributes-position"
@@ -1030,7 +1060,7 @@ const Particles = () => {
 				</mesh>,
 				scene,
 			)}
-			<points frustumCulled={false} ref={points}>
+			<points key={`points${selectedAttractor}${particlesPosition.length}`} frustumCulled={false} ref={points}>
 				<bufferGeometry>
 					<bufferAttribute
 						attach="attributes-position"
