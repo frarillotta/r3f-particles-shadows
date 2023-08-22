@@ -1,5 +1,5 @@
 {
-  "name": "outline-postprocessing",
+  "name": "r3f-particles-shadows",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite --host",
