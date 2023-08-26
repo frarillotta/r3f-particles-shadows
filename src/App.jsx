@@ -92,10 +92,9 @@ const vertexShader = `
 	void main() {
 		float u = position.x;
 		float v = position.y;
-		vec3 pos = vec3(0.);
+		vec3 pos = position;
 
 		float distanceColorMultiplier;
-
 
 		if(uSelectedShape == 1.0) {
 			distanceColorMultiplier = 0.2;
@@ -113,7 +112,6 @@ const vertexShader = `
 			pos.y=(3.+ sin(2.*PI*u)*sin(2.*PI*v))*cos(2.*PI*v);
 			pos.z=cos(2.*PI*u)*sin(2.*PI*v)+4.*v-2.;
 		}
-
 
 		if (uSelectedShape == 4.0) {
 
@@ -199,6 +197,24 @@ const vertexShader = `
 			pos.x=0.66 * cos(1.03 + u)*(2.+cos(v));
 			pos.y=0.75 * cos(1.41-u)*(2.+0.87*cos(2.44+v));
 			pos.z=0.87 * cos(2.44+u)*(2.+0.5*cos(0.38-v));
+		}
+
+		if (uSelectedShape == 19.0) {
+			pos.x=cos(v)*(1.+cos(u))*sin(v/8.);
+			pos.y=sin(u)*sin(v/8.)+cos(v/8.)*1.5;
+			pos.z=sin(v)*(1.+cos(u))*sin(v/8.);
+		}
+
+		if (uSelectedShape == 20.0) {
+			pos.x=cos(u+v)/(sqrt(2.)+cos(v-u));
+			pos.y=sin(v-u)/(sqrt(2.)+cos(v-u));
+			pos.z=sin(u+v)/(sqrt(2.)+cos(v-u));
+		}
+
+		if (uSelectedShape == 22.0) {
+			pos.x=cos(u)*(6.-(5./4. + sin(3.*v))*sin(v-3.*u)) / 2.;
+			pos.y=(6.-(5./4. + sin(3.*v))*sin(v-3.*u))*sin(u) / 2.;
+			pos.z=-cos(v-3.*u)*(5./4.+sin(3.*v)) / 2.;
 		}
 
 		if (uCurlIntensity > 0.) {
@@ -450,7 +466,10 @@ const Particles = () => {
 				'15': 15,
 				'16': 16,
 				'17': 17,
-				'18': 18
+				'18': 18,
+				'19': 19,
+				'20': 20,
+				'22': 22
 			}
 		},
 		innerColor: {
@@ -533,6 +552,9 @@ const Particles = () => {
 				const theta = phi * i;
 				x = Math.cos(theta) * radius
 				z = Math.sin(theta) * radius
+				x *= 5;
+				y *= 5;
+				z *= 5;
 			}
 
 			if (selectedShape === 4) {
@@ -553,7 +575,7 @@ const Particles = () => {
 			
 			if (selectedShape === 8) {
 				x = MathUtils.randFloat(0, Math.PI * 2);
-				y = MathUtils.randFloat(0, 10);
+				y = MathUtils.randFloat(0, 7);
 			}
 
 			if (selectedShape === 9) {
@@ -605,6 +627,22 @@ const Particles = () => {
 				x = MathUtils.randFloat(0, Math.PI * 2);
 				y = MathUtils.randFloat(0, Math.PI * 2);
 			}
+
+
+			if (selectedShape === 19) {
+				x = MathUtils.randFloat(0, Math.PI * 2);
+				y = MathUtils.randFloat(0, Math.PI * 4);
+			}
+
+			if (selectedShape === 20) {
+				x = MathUtils.randFloat(0, Math.PI);
+				y = MathUtils.randFloat(0, Math.PI * 2);
+			}
+
+			if (selectedShape === 22) {
+				x = MathUtils.randFloat(0, Math.PI * 2);
+				y = MathUtils.randFloat(0, Math.PI * 2);
+			}
 			particles[i3 + 0] = x;
 			particles[i3 + 1] = y;
 			particles[i3 + 2] = z;
@@ -619,7 +657,7 @@ const Particles = () => {
 		//TODO: should colors change on each re-render?
 		set({ innerColor, outerColor });
 	}, [selectedShape]);
-''
+
 
 	useFrame((state) => {
 		if (pause) return;
