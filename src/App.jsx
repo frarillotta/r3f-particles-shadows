@@ -469,7 +469,8 @@ const Particles = () => {
 				'18': 18,
 				'19': 19,
 				'20': 20,
-				'22': 22
+				'22': 22,
+				'23': 23
 			}
 		},
 		innerColor: {
@@ -494,7 +495,7 @@ const Particles = () => {
 		curlAmplitude: {
 			value: 0,
 			min: 0,
-			max: 0.3,
+			max: 1.5,
 			step: 0.01,
 			onChange: (v) => { uniforms.uCurlAmplitude.value = v },
 		},
@@ -536,7 +537,6 @@ const Particles = () => {
 	const particlesPosition = useMemo(() => {
 		const length = particlesCount * particlesCount;
 		const particles = new Float32Array(length * 3);
-
 		for (let i = 0; i < length; i++) {
 			const i3 = i * 3;
 
@@ -642,6 +642,18 @@ const Particles = () => {
 			if (selectedShape === 22) {
 				x = MathUtils.randFloat(0, Math.PI * 2);
 				y = MathUtils.randFloat(0, Math.PI * 2);
+			}
+
+			if (selectedShape === 23) {
+				const phi = Math.PI * Math.random();
+				y = 1 - (i / (length)) * 2;
+				const radius = Math.sqrt(1 - y * y);
+				const theta = phi * i;
+				x = Math.cos(theta) * (1 - MathUtils.randFloat(0, Math.random())) * radius;
+				z = Math.sin(theta) * (1 - MathUtils.randFloat(0, Math.random())) * radius;
+				x *= 5;
+				y *= 5;
+				z *= 5;
 			}
 			particles[i3 + 0] = x;
 			particles[i3 + 1] = y;
